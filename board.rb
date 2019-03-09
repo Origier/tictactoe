@@ -4,7 +4,9 @@ class Board
   attr_accessor :board, :size
   def initialize(size)
     @size = size
-    @board = Array.new(size, Array.new(size, nil))
+    @board = []
+    @size.times {@board << []}
+    @board.each {|i| @size.times{ i << nil }}
   end
 
   def drawBoard
@@ -40,5 +42,9 @@ class Board
     else
       return true
     end
+  end
+
+  def addPiece(player, x, y)
+    @board[y][x] = Piece.new(player.symbol, x, y)
   end
 end
