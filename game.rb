@@ -1,9 +1,10 @@
 require_relative "board"
 require_relative "player"
 require_relative "piece"
-$players = []
 $counter = 0
-$board = Board.new(3)
+
+
+#Checking the board for other nearby pieces
 
 def checkForNeighbors(x, y)
   checkForDirection(x, y, 1, 0, :east) unless x == 2
@@ -15,6 +16,14 @@ def checkForNeighbors(x, y)
   checkForDirection(x, y, 1, 1, :southeast) unless y == 2 or x == 2
   checkForDirection(x, y, -1, 1, :southwest) unless y == 2 or x == 0
 end
+
+def checkForDirection(x, y, delta_x, delta_y, direction)
+  $board.board[y][x].addNeighbor($board.board[y + delta_y][x + delta_x], direction) if $board.board[y + delta_y][x + delta_x] != nil
+end
+
+
+
+#Checking for win Conditions
 
 def stepTowards(direction)
   case direction
@@ -38,26 +47,20 @@ def stepTowards(direction)
 end
 
 def threeInARow(x, y)
-  puts "running inside threeInARow on #{x} and #{y}"
   if $board.board[y][x].neighbors.length == 0
     return false
   else
     $board.board[y][x].neighbors.each do |direction, symbol|
-      puts symbol
-      puts direction
       if symbol == $board.board[y][x].reference
         step = stepTowards(direction)
-        puts direction
-        puts step
         if $board.board[y + step[:y]][x + step[:x]].neighbors[direction] == $board.board[y][x].reference
           return true
-        else
-          return false
         end
       else
         return false
       end
     end
+    return false
   end
 end
 
@@ -83,11 +86,12 @@ def checkWinCondition
   end
 end
 
-def checkForDirection(x, y, delta_x, delta_y, direction)
-  $board.board[y][x].addNeighbor($board.board[y + delta_y][x + delta_x], direction) if $board.board[y + delta_y][x + delta_x] != nil
-end
+
+
+#Main Functionality of the game including the creating of characters and playing the actual game
 
 def createCharacters
+  $players = []
   2.times do |i|
     system "clear" or system "cls"
     puts "Alright Player #{i + 1} please enter your name: "
@@ -116,18 +120,32 @@ def createCharacters
   end
 end
 
-def playGame
+def playAgain?
+  sleep(1)
+  puts "Would you like to play again?"
+  input = gets.chomp.downcase
+  if input == "yes"
+    playGame($players)
+  else
+    exit
+  end
+end
+
+def playGame(players = nil)
   system "clear" or system "cls"
+  $board = Board.new(3)
+  $players = players
   $board.drawBoard
+  turns = 0
   puts "Welcome to Tic-Tac-Toe Ruby edition, once you find yourself a second player type \"start\" and hit enter to get started."
   input = ""
   while input != "start"
     input = gets.chomp.downcase
   end
-  createCharacters
+  createCharacters unless $players != nil
   system "clear" or system "cls"
   $board.drawBoard
-  puts "Alright let's begin, #{$players[0].name.capitalize} will start the game, simply type in the x and y coordinate that you wish to place a piece at, separate the coordinates by a comma please: "
+  puts "Alright let's begin, #{$players[$counter].name.capitalize} will start the game, simply type in the x and y coordinate that you wish to place a piece at, separate the coordinates by a comma please: "
   coors = gets.chomp.gsub(/\s+/, "").split(",")
   until $board.checkBounds(coors[0].to_i, coors[1].to_i)
     coors = gets.chomp.gsub(/\s+/, "").split(",")
@@ -145,16 +163,19 @@ def playGame
     $board.addPiece($players[$counter], coors[0].to_i, coors[1].to_i)
     checkForNeighbors(coors[0].to_i, coors[1].to_i)
     if checkWinCondition
+      system "clear" or system "cls"
       $board.drawBoard
       puts "#{$players[$counter].name.capitalize} has won! Congratulations!."
+      playAgain?
+    elsif turns == 7
+      system "clear" or system "cls"
+      $board.drawBoard
+      puts "Looks like neither of you have one, better luck next time..."
+      playAgain?
+    else
+      turns += 1
     end
   end
 end
 
 playGame
-
-def test
-  
-end
-
-#test
