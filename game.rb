@@ -56,8 +56,6 @@ def threeInARow(x, y)
         if $board.board[y + step[:y]][x + step[:x]].neighbors[direction] == $board.board[y][x].reference
           return true
         end
-      else
-        return false
       end
     end
     return false
@@ -91,13 +89,13 @@ end
 #Main Functionality of the game including the creating of characters and playing the actual game
 
 def createCharacters
-  $players = []
+  players = []
   2.times do |i|
     system "clear" or system "cls"
     puts "Alright Player #{i + 1} please enter your name: "
     name = gets.chomp
     if i == 1
-      while name.downcase == $players[0].name.downcase
+      while name.downcase == players[0].name.downcase
         puts "Sorry you can't use the same name as player 1, please try again."
         name = gets.chomp
       end
@@ -105,7 +103,7 @@ def createCharacters
     puts "Alright #{name}, type a single character that you wish to represent your game piece: "
     char = gets.chomp
     if i == 1
-      while char == $players[0].symbol or char.length > 1
+      while char == players[0].symbol or char.length > 1
         puts "Sorry you may only use one character and it can't be the same as player 1."
         char = gets.chomp
       end
@@ -115,17 +113,19 @@ def createCharacters
         char = gets.chomp
       end
     end
-    $players << Player.new(char, name)
+    players << Player.new(char, name)
     sleep(2)
   end
+  return players
 end
 
-def playAgain?
-  sleep(1)
+def playAgain?(players)
+  sleep(2)
   puts "Would you like to play again?"
   input = gets.chomp.downcase
   if input == "yes"
-    playGame($players)
+    $counter = $counter == 0 ? 1 : 0
+    playGame(players)
   else
     exit
   end
@@ -134,44 +134,45 @@ end
 def playGame(players = nil)
   system "clear" or system "cls"
   $board = Board.new(3)
-  $players = players
   $board.drawBoard
   turns = 0
-  puts "Welcome to Tic-Tac-Toe Ruby edition, once you find yourself a second player type \"start\" and hit enter to get started."
-  input = ""
-  while input != "start"
-    input = gets.chomp.downcase
+  if players == nil
+    puts "Welcome to Tic-Tac-Toe Ruby edition, once you find yourself a second player type \"start\" and hit enter to get started."
+    input = ""
+    while input != "start"
+      input = gets.chomp.downcase
+    end
+    players = createCharacters
   end
-  createCharacters unless $players != nil
   system "clear" or system "cls"
   $board.drawBoard
-  puts "Alright let's begin, #{$players[$counter].name.capitalize} will start the game, simply type in the x and y coordinate that you wish to place a piece at, separate the coordinates by a comma please: "
+  puts "Alright let's begin, #{players[$counter].name.capitalize} will start the game, simply type in the x and y coordinate that you wish to place a piece at, separate the coordinates by a comma please: "
   coors = gets.chomp.gsub(/\s+/, "").split(",")
   until $board.checkBounds(coors[0].to_i, coors[1].to_i)
     coors = gets.chomp.gsub(/\s+/, "").split(",")
   end
-  $board.addPiece($players[0], coors[0].to_i, coors[1].to_i)
+  $board.addPiece(players[$counter], coors[0].to_i, coors[1].to_i)
   until checkWinCondition
     system "clear" or system "cls"
     $board.drawBoard
     $counter = $counter == 0 ? 1 : 0
-    puts "It is now #{$players[$counter].name.capitalize}'s turn, type your coordinates to continue: "
+    puts "It is now #{players[$counter].name.capitalize}'s turn, type your coordinates to continue: "
     coors = gets.chomp.gsub(/\s+/, "").split(",")
     until $board.checkBounds(coors[0].to_i, coors[1].to_i)
       coors = gets.chomp.gsub(/\s+/, "").split(",")
     end
-    $board.addPiece($players[$counter], coors[0].to_i, coors[1].to_i)
+    $board.addPiece(players[$counter], coors[0].to_i, coors[1].to_i)
     checkForNeighbors(coors[0].to_i, coors[1].to_i)
     if checkWinCondition
       system "clear" or system "cls"
       $board.drawBoard
-      puts "#{$players[$counter].name.capitalize} has won! Congratulations!."
-      playAgain?
+      puts "#{players[$counter].name.capitalize} has won! Congratulations!."
+      playAgain?(players)
     elsif turns == 7
       system "clear" or system "cls"
       $board.drawBoard
       puts "Looks like neither of you have one, better luck next time..."
-      playAgain?
+      playAgain?(players)
     else
       turns += 1
     end
